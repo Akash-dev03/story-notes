@@ -29,7 +29,7 @@
 
     #file-list {
       width: 25%;
-      background: #fff;
+      background: white;
       border-right: 1px solid #ccc;
       overflow-y: auto;
     }
@@ -55,7 +55,6 @@
     }
   </style>
 
-  <!-- Markdown Renderer (Showdown) -->
   <script src="https://cdn.jsdelivr.net/npm/showdown/dist/showdown.min.js"></script>
 </head>
 
@@ -71,17 +70,18 @@
   </div>
 
   <script>
-    // CONFIG — your GitHub repo folder
+    // CONFIG — your GitHub repo
     const repoUser = "Akash-dev03";
-    const repoName = "obsidian_notes";
+    const repoName = "story-notes";
     const folderPath = "obsidian_notes/Medibricz/medibricz/Story";
 
-    // GitHub API to list directory contents
+    // GitHub API URL
     const apiURL = `https://api.github.com/repos/${repoUser}/${repoName}/contents/${folderPath}`;
 
     const listContainer = document.getElementById("file-list");
     const contentContainer = document.getElementById("content");
 
+    // Load and render a Markdown file
     function loadFile(rawUrl, title) {
       fetch(rawUrl)
         .then(res => res.text())
@@ -92,16 +92,23 @@
         });
     }
 
+    // Fetch list of files
     fetch(apiURL)
       .then(res => res.json())
       .then(files => {
+        if (!Array.isArray(files)) {
+          contentContainer.innerHTML = "<p>Error: Folder not found or private.</p>";
+          return;
+        }
+
         files
           .filter(f => f.name.endsWith(".md"))
           .forEach(file => {
             const link = document.createElement("a");
-            link.textContent = file.name.replace(".md", "");
+            const title = file.name.replace(".md", "");
+            link.textContent = title;
             link.href = "#";
-            link.onclick = () => loadFile(file.download_url, link.textContent);
+            link.onclick = () => loadFile(file.download_url, title);
             listContainer.appendChild(link);
           });
       });
