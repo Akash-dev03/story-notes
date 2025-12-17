@@ -3,55 +3,165 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Story Index</title>
+  <title>HMS Story Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
+    /* ========= BASE DARK THEME ========= */
+    :root {
+      --bg: #0d1117;
+      --bg-light: #161b22;
+      --sidebar: #0f141a;
+      --text: #e4e8ef;
+      --text-light: #c9d1d9;
+      --border: #30363d;
+      --accent: #409eff;
+      --accent-hover: #66b1ff;
+      --link-hover-bg: rgba(64, 158, 255, 0.15);
+      --scrollbar-bg: #1c2128;
+      --scrollbar-thumb: #30363d;
+    }
+
     body {
-      font-family: Arial, sans-serif;
       margin: 0;
-      padding: 0;
-      background: #f4f4f4;
-    }
-
-    header {
-      background: #333;
-      color: white;
-      padding: 20px;
-      text-align: center;
-      font-size: 24px;
-    }
-
-    #container {
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
       display: flex;
-      height: calc(100vh - 70px);
+      overflow: hidden;
     }
 
-    #file-list {
-      width: 25%;
-      background: white;
-      border-right: 1px solid #ccc;
+    /* ========= SIDEBAR ========= */
+    #sidebar {
+      width: 310px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      padding: 18px;
       overflow-y: auto;
     }
 
-    #file-list a {
+    #sidebar h2 {
+      margin-top: 0;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    #searchBox {
+      width: 100%;
+      padding: 9px;
+      margin-bottom: 16px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* Category block */
+    .category h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-top: 20px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .story-link {
       display: block;
-      padding: 12px 16px;
-      border-bottom: 1px solid #eee;
-      color: #333;
+      padding: 8px 10px;
+      color: var(--text-light);
       text-decoration: none;
-      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.15s;
     }
 
-    #file-list a:hover {
-      background: #f0f0f0;
+    .story-link:hover {
+      background: var(--link-hover-bg);
+      color: var(--accent);
     }
 
+    /* ========= CONTENT PANEL ========= */
     #content {
-      width: 75%;
-      padding: 20px;
+      flex: 1;
+      padding: 40px;
       overflow-y: auto;
-      background: white;
+      background: var(--bg);
+    }
+
+    #content h1 {
+      margin-top: 0;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      font-size: 28px;
+      color: var(--accent);
+    }
+
+    /* ========= MARKDOWN STYLING ========= */
+    #content p,
+    #content li {
+      line-height: 1.6;
+      font-size: 16px;
+      color: var(--text-light);
+    }
+
+    #content h2,
+    #content h3,
+    #content h4 {
+      color: var(--text);
+      margin-top: 28px;
+      font-weight: 600;
+    }
+
+    #content pre {
+      background: var(--bg-light);
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+    }
+
+    #content code {
+      color: #ffae57;
+    }
+
+    #content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      background: var(--bg-light);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    #content table th,
+    #content table td {
+      padding: 10px;
+      border: 1px solid var(--border);
+      color: var(--text-light);
+    }
+
+    #content blockquote {
+      border-left: 4px solid var(--accent);
+      padding-left: 12px;
+      color: var(--text-light);
+      margin-left: 0;
+    }
+
+    /* ========= SCROLLBAR ========= */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--scrollbar-bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--scrollbar-thumb);
+      border-radius: 6px;
     }
   </style>
 
@@ -60,58 +170,100 @@
 
 <body>
 
-  <header>📚 Medibricz Stories</header>
+  <div id="sidebar">
+    <h2>📘 HMS Test Stories</h2>
+    <input id="searchBox" type="text" placeholder="Search…" onkeyup="filterStories()">
+    <div id="storyList"></div>
+  </div>
 
-  <div id="container">
-    <div id="file-list"></div>
-    <div id="content">
-      <h2>Select a story from the left</h2>
-    </div>
+  <div id="content">
+    <h1>Welcome</h1>
+    <p>Select a story from the left panel.</p>
   </div>
 
   <script>
-    // CONFIG — your GitHub repo
+    /* ========== CONFIG ========== */
     const repoUser = "Akash-dev03";
-    const repoName = "story-notes";
-    const folderPath = "obsidian_notes/Medibricz/medibricz/Story";
+    const repoName = "obsidian_notes";
+    const folderPath = "Medibricz/medibricz/Story";
 
-    // GitHub API URL
     const apiURL = `https://api.github.com/repos/${repoUser}/${repoName}/contents/${folderPath}`;
 
-    const listContainer = document.getElementById("file-list");
-    const contentContainer = document.getElementById("content");
+    const storyListDiv = document.getElementById("storyList");
+    const contentDiv = document.getElementById("content");
+    const categories = {};
 
-    // Load and render a Markdown file
-    function loadFile(rawUrl, title) {
-      fetch(rawUrl)
-        .then(res => res.text())
-        .then(md => {
-          const converter = new showdown.Converter();
-          const html = converter.makeHtml(md);
-          contentContainer.innerHTML = `<h2>${title}</h2>` + html;
-        });
+    /* ========== CATEGORY LOGIC ========== */
+    function detectCategory(name) {
+      if (name.includes("→")) return name.split("→")[0].trim();
+      if (/^OPD/i.test(name)) return "OPD";
+      if (/^IPD/i.test(name)) return "IPD";
+      if (/ICU/i.test(name)) return "ICU";
+      if (/Emergency|ER/i.test(name)) return "Emergency";
+      if (/Billing|Payment/i.test(name)) return "Billing";
+      return "General";
     }
 
-    // Fetch list of files
+    /* ========== FETCH & PARSE FILES ========== */
     fetch(apiURL)
-      .then(res => res.json())
+      .then(r => r.json())
       .then(files => {
-        if (!Array.isArray(files)) {
-          contentContainer.innerHTML = "<p>Error: Folder not found or private.</p>";
-          return;
-        }
-
         files
           .filter(f => f.name.endsWith(".md"))
           .forEach(file => {
-            const link = document.createElement("a");
-            const title = file.name.replace(".md", "");
-            link.textContent = title;
-            link.href = "#";
-            link.onclick = () => loadFile(file.download_url, title);
-            listContainer.appendChild(link);
+            let clean = file.name.replace(".md", "").trim();
+            let cat = detectCategory(clean);
+            if (!categories[cat]) categories[cat] = [];
+            categories[cat].push({
+              title: clean,
+              raw: file.download_url
+            });
           });
+
+        renderSidebar();
       });
+
+    /* ========== SIDEBAR RENDERING ========== */
+    function renderSidebar() {
+      storyListDiv.innerHTML = "";
+
+      Object.keys(categories).sort().forEach(cat => {
+        let block = document.createElement("div");
+        block.className = "category";
+        block.innerHTML = `<h3>${cat}</h3>`;
+
+        categories[cat].forEach(story => {
+          let a = document.createElement("a");
+          a.className = "story-link";
+          a.textContent = story.title;
+          a.onclick = () => loadMarkdown(story.raw, story.title);
+          block.appendChild(a);
+        });
+
+        storyListDiv.appendChild(block);
+      });
+    }
+
+    /* ========== LOADING MARKDOWN FILES ========== */
+    function loadMarkdown(url, title) {
+      fetch(url)
+        .then(r => r.text())
+        .then(md => {
+          const conv = new showdown.Converter({tables: true});
+          let html = conv.makeHtml(md);
+          contentDiv.innerHTML = `<h1>${title}</h1>` + html;
+        });
+    }
+
+    /* ========== SEARCH FILTER ========== */
+    function filterStories() {
+      const q = document.getElementById("searchBox").value.toLowerCase();
+      document.querySelectorAll(".story-link").forEach(link => {
+        link.style.display = link.textContent.toLowerCase().includes(q)
+          ? "block"
+          : "none";
+      });
+    }
   </script>
 </body>
 
