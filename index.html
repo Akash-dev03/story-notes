@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Story Index</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+    }
+
+    header {
+      background: #333;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+    }
+
+    #container {
+      display: flex;
+      height: calc(100vh - 70px);
+    }
+
+    #file-list {
+      width: 25%;
+      background: #fff;
+      border-right: 1px solid #ccc;
+      overflow-y: auto;
+    }
+
+    #file-list a {
+      display: block;
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+      color: #333;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    #file-list a:hover {
+      background: #f0f0f0;
+    }
+
+    #content {
+      width: 75%;
+      padding: 20px;
+      overflow-y: auto;
+      background: white;
+    }
+  </style>
+
+  <!-- Markdown Renderer (Showdown) -->
+  <script src="https://cdn.jsdelivr.net/npm/showdown/dist/showdown.min.js"></script>
+</head>
+
+<body>
+
+  <header>📚 Medibricz Stories</header>
+
+  <div id="container">
+    <div id="file-list"></div>
+    <div id="content">
+      <h2>Select a story from the left</h2>
+    </div>
+  </div>
+
+  <script>
+    // CONFIG — your GitHub repo folder
+    const repoUser = "Akash-dev03";
+    const repoName = "obsidian_notes";
+    const folderPath = "obsidian_notes/Medibricz/medibricz/Story";
+
+    // GitHub API to list directory contents
+    const apiURL = `https://api.github.com/repos/${repoUser}/${repoName}/contents/${folderPath}`;
+
+    const listContainer = document.getElementById("file-list");
+    const contentContainer = document.getElementById("content");
+
+    function loadFile(rawUrl, title) {
+      fetch(rawUrl)
+        .then(res => res.text())
+        .then(md => {
+          const converter = new showdown.Converter();
+          const html = converter.makeHtml(md);
+          contentContainer.innerHTML = `<h2>${title}</h2>` + html;
+        });
+    }
+
+    fetch(apiURL)
+      .then(res => res.json())
+      .then(files => {
+        files
+          .filter(f => f.name.endsWith(".md"))
+          .forEach(file => {
+            const link = document.createElement("a");
+            link.textContent = file.name.replace(".md", "");
+            link.href = "#";
+            link.onclick = () => loadFile(file.download_url, link.textContent);
+            listContainer.appendChild(link);
+          });
+      });
+  </script>
+</body>
+
+</html>
